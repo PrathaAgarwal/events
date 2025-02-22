@@ -14,31 +14,36 @@ url = 'https://whatson.cityofsydney.nsw.gov.au/'
 response = requests.get(url)
 from datetime import datetime, timedelta
 
-from datetime import datetime, timedelta
-
 def parse_event_date(event_date_str):
     if not event_date_str or event_date_str.strip() == "":
         print(f"⚠️ Warning: Empty date value received.")
         return "1970-01-01"  # Fallback to prevent NULL errors
 
     event_date_str = event_date_str.lower().strip()
-    
+
     # Handle "Today" and "Tomorrow"
-    if "Today" in event_date_str:
+    if "today" in event_date_str:
         return datetime.today().strftime("%Y-%m-%d")
 
-    elif "Tomorrow" in event_date_str:
+    if "tomorrow" in event_date_str:
         return (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    # Handle dates in format like "March 5, 2025"
+    # Handle dates in format like "26 Feb 2025" or "5 Apr 2025"
     try:
-        return datetime.strptime(event_date_str, "%B %d, %Y").strftime("%Y-%m-%d")
+        return datetime.strptime(event_date_str, "%d %b %Y").strftime("%Y-%m-%d")
     except ValueError:
         pass
 
+    # Handle cases like "Today 10am to 5pm" (extracting only 'Today')
+    if event_date_str.startswith("today"):
+        return datetime.today().strftime("%Y-%m-%d")
+    
+    if event_date_str.startswith("tomorrow"):
+        return (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+
     print(f"⚠️ Warning: Could not parse date '{event_date_str}', using fallback.")
     return "1970-01-01"  # Default fallback (so it never returns NULL)
-# If format is unknown
+
 
 if response.status_code == 200:
     soup = BeautifulSoup(response.text, "html.parser")
