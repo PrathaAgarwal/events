@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sydney Events</title>
+    <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+
+    <h1>Upcoming Events in Sydney</h1>
+    <div class="event-container" id="events-list">
+        <p>Loading events...</p>
+    </div>
+
+    <!-- Email Popup Modal -->
+    <div id="emailModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Enter Your Email</h2>
+            <input type="email" id="emailInput" placeholder="Your email..." required>
+            <button id="submitEmail">Submit</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedEventLink = ""; // Store the selected event link
+
+        async function fetchEvents() {
+            try {
+                const response = await fetch("http://localhost:3000/events");
+                const events = await response.json();
+                const eventsContainer = document.getElementById("events-list");
+                eventsContainer.innerHTML = ""; // Clear loading message
+
+                if (events.length === 0) {
+                    eventsContainer.innerHTML = "<p>No events found.</p>";
+                    return;
+                }
+
+                events.forEach(event => {
+                    const eventCard = document.createElement("div");
+                    eventCard.classList.add("event-card");
+                    eventCard.innerHTML = `
+                        <h3>${event.title}</h3>
+                        <p><strong>Date:</strong> ${event.date}</p>
+                        <p><strong>Location:</strong> ${event.location}</p>
+                        <button class="get-tickets" data-link="${event.link}">Get Tickets</button>
+                    `;
+                    eventsContainer.appendChild(eventCard);
+                });
+
+                // Add event listener to all "Get Tickets" buttons
+                document.querySelectorAll(".get-tickets").forEach(button => {
+                    button.addEventListener("click", function () {
+                        selectedEventLink = this.getAttribute("data-link");
+                        document.getElementById("emailModal").style.display = "block";
+                    });
+                });
+
+            } catch (error) {
+                console.error("Error fetching events:", error);
+                document.getElementById("events-list").innerHTML = "<p>Failed to load events.</p>";
+            }
+        }
+
+        // Close modal when "X" is clicked
+        document.querySelector(".close").addEventListener("click", () => {
+            document.getElementById("emailModal").style.display = "none";
+        });
+
+        // Submit email and redirect
+        document.getElementById("submitEmail").addEventListener("click", () => {
+            const email = document.getElementById("emailInput").value;
+            if (email) {
+                console.log("User email:", email); // You can send this to the backend if needed
+                window.open(`https://whatson.cityofsydney.nsw.gov.au${selectedEventLink}`, "_blank"); // Open event link in new tab
+                document.getElementById("emailModal").style.display = "none"; // Close modal
+            } else {
+                alert("Please enter a valid email!");
+            }
+        });
+
+        fetchEvents(); // Load events on page load
+    </script>
+
+</body>
+</html>
+

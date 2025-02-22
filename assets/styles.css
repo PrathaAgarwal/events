@@ -1,0 +1,118 @@
+/* General Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to bottom right, #ffdde1, #ee9ca7, #b5c7ed, #c9e4de);
+    color: #444;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+/* Header */
+h1 {
+    font-size: 2.5rem;
+    color: #d16ba5; /* Soft pastel pink-purple */
+    margin-top: 20px;
+}
+
+/* Event Container */
+.event-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Event Card */
+.event-card {
+    background: rgba(255, 255, 255, 0.8); /* Soft translucent white */
+    border-radius: 15px;
+    padding: 15px;
+    width: 280px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.event-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* Get Tickets Button */
+.get-tickets {
+    display: inline-block;
+    padding: 10px 15px;
+    background: #d16ba5; /* Soft coral pink-purple */
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+.get-tickets:hover {
+    background: #e4a2c7; /* Darker shade */
+    transform: translateY(-2px);
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    margin: 15% auto;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+    margin-bottom: 15px;
+    color: #d16ba5;
+}
+
+.modal-content input {
+    width: 90%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.modal-content button {
+    background: #d16ba5;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+.modal-content button:hover {
+    background: #e4a2c7; /* Darker shade */
+    transform: translateY(-2px);
+}
+
+/* Close button */
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 20px;
+    cursor: pointer;
+}
