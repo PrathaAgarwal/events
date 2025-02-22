@@ -25,7 +25,7 @@ if response.status_code == 200:
 
         cursor.execute(
             "INSERT INTO events (title, date, location, link) VALUES (%s, %s, %s, %s) ON CONFLICT (link) DO NOTHING",
-            (title, date, location, link)
+            (title, parse_event_date(date), location, link)
         )
 
         print(f"Title: {title}\nDate: {date}\nLocation: {location}\nLink: {link}\n---")
