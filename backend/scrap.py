@@ -17,10 +17,10 @@ from datetime import datetime, timedelta
 def parse_event_date(event_date_str):
     event_date_str = event_date_str.lower().strip()
 
-    if "today" in event_date_str:
+    if "Today" in event_date_str:
         return datetime.today().strftime("%Y-%m-%d")
 
-    elif "tomorrow" in event_date_str:
+    elif "Tomorrow" in event_date_str:
         return (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
     try:
