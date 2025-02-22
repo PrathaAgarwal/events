@@ -1,0 +1,15 @@
+Project Report: Event Recommendation System
+Objective:
+Create an MVP of a trained open-source LLM to help users select events in Sydney based on their preferences and notify them via WhatsApp/Telegram.
+Approach:
+1.	User Preferences: Collected event preferences (type, budget, location) through a chatbot interface.
+2.	LLM Training: Fine-tuned Mistral-7B using LangChain for event matching.
+3.	Notification System: Integrated Twilio API (WhatsApp) and Telegram Bot API to notify users about relevant events.
+4.	Integration: Combined chatbot, event recommendations, and notifications for a seamless experience.
+Challenges:
+•	Fine-Tuning: Ensuring the LLM accurately matched user preferences with events.
+•	Notification Setup: Integrating Twilio and Telegram for timely alerts.
+Improvements:
+•	User Interaction: Enhance the chatbot interface by adding more dynamic options, such as allowing users to adjust preferences like event timing or specific event organizers, for a more personalized experience.
+•	Scalability: Integrate with more event platforms for broader recommendations.
+

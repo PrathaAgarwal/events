@@ -2,6 +2,15 @@ import express from "express";
 import pg from "pg";
 import cron from "node-cron";
 import { exec } from "child_process";
+const app = express();
+
+import dotenv from "dotenv";
+dotenv.config();
+
+const db = new pg.Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Needed for some cloud services
+});
 
 // Run the scraper every 24 hours (midnight)
 cron.schedule("0 0 * * *", () => {
@@ -19,16 +28,7 @@ cron.schedule("0 0 * * *", () => {
     });
 });
 
-const app = express();
-const port = 3000;
-const db = new pg.Client({
-  user: "postgres",
-  host: "localhost",
-  database: "all_events",
-  password: "root",
-  port: 5432,
-});
-db.connect();
+
 app.get("/", (req, res) => {
   res.sendFile("/web dev/mine/Assignments/assignment1/index.html");
 });
@@ -39,7 +39,4 @@ app.get("/events", async (req, res) => {
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
-  });
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
   });

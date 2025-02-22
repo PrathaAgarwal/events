@@ -3,13 +3,14 @@ from telegram import Bot
 from datetime import datetime
 import logging
 
-DB_PARAMS = {
-    "dbname": "all_events",
-    "user": "postgres",
-    "password": "root",
-    "host": "localhost",
-    "port": "5432"
-}
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+con = psycopg2.connect(DATABASE_URL)
+
 
 # Set up Telegram bot
 bot = Bot(token="YOUR_TELEGRAM_BOT_TOKEN")
