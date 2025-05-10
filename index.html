@@ -1,89 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sydney Events</title>
-    <link rel="stylesheet" href="./assets/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sydney Events</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-
-    <h1>Upcoming Events in Sydney</h1>
-    <div class="event-container" id="events-list">
-        <p>Loading events...</p>
+  <h1>Upcoming Events in Sydney</h1>
+  <div class="event-container" id="events-list">
+    <p>Loading events...</p>
+  </div>
+  <!-- Email Popup Modal -->
+  <div id="emailModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Enter Your Email</h2>
+      <input type="email" id="emailInput" placeholder="Your email..." required />
+      <button id="submitEmail">Submit</button>
     </div>
+  </div>
+  <script>
+    let selectedEventLink = "";
+    async function fetchEvents() {
+      try {
+        const backendURL = window.location.hostname === "localhost"
+          ? "http://localhost:3000"
+          : "https://your-deployed-backend.com";
+        const response = await fetch(`${backendURL}/events`);
+        const events = await response.json();
+        const eventsContainer = document.getElementById("events-list");
+        eventsContainer.innerHTML = "";
 
-    <!-- Email Popup Modal -->
-    <div id="emailModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Enter Your Email</h2>
-            <input type="email" id="emailInput" placeholder="Your email..." required>
-            <button id="submitEmail">Submit</button>
-        </div>
-    </div>
-
-    <script>
-        let selectedEventLink = ""; // Store the selected event link
-
-        async function fetchEvents() {
-            try {
-                const response = await fetch("http://localhost:3000/events");
-                const events = await response.json();
-                const eventsContainer = document.getElementById("events-list");
-                eventsContainer.innerHTML = ""; // Clear loading message
-
-                if (events.length === 0) {
-                    eventsContainer.innerHTML = "<p>No events found.</p>";
-                    return;
-                }
-
-                events.forEach(event => {
-                    const eventCard = document.createElement("div");
-                    eventCard.classList.add("event-card");
-                    eventCard.innerHTML = `
-                        <h3>${event.title}</h3>
-                        <p><strong>Date:</strong> ${event.date}</p>
-                        <p><strong>Location:</strong> ${event.location}</p>
-                        <button class="get-tickets" data-link="${event.link}">Get Tickets</button>
-                    `;
-                    eventsContainer.appendChild(eventCard);
-                });
-
-                // Add event listener to all "Get Tickets" buttons
-                document.querySelectorAll(".get-tickets").forEach(button => {
-                    button.addEventListener("click", function () {
-                        selectedEventLink = this.getAttribute("data-link");
-                        document.getElementById("emailModal").style.display = "block";
-                    });
-                });
-
-            } catch (error) {
-                console.error("Error fetching events:", error);
-                document.getElementById("events-list").innerHTML = "<p>Failed to load events.</p>";
-            }
+        if (!events || events.length === 0) {
+          eventsContainer.innerHTML = "<p>No events found.</p>";
+          return;
         }
 
-        // Close modal when "X" is clicked
-        document.querySelector(".close").addEventListener("click", () => {
-            document.getElementById("emailModal").style.display = "none";
+        events.forEach(event => {
+          const eventCard = document.createElement("div");
+          eventCard.classList.add("event-card");
+          eventCard.innerHTML = `
+            <h3>${event.title}</h3>
+            <p><strong>Date:</strong> ${event.date}</p>
+            <p><strong>Location:</strong> ${event.location}</p>
+            <button class="get-tickets" data-link="${event.link}">Get Tickets</button>
+          `;
+          eventsContainer.appendChild(eventCard);
+        });
+        document.querySelectorAll(".get-tickets").forEach(button => {
+          button.addEventListener("click", function () {
+            selectedEventLink = this.getAttribute("data-link");
+            document.getElementById("emailModal").style.display = "block";
+          });
         });
 
-        // Submit email and redirect
-        document.getElementById("submitEmail").addEventListener("click", () => {
-            const email = document.getElementById("emailInput").value;
-            if (email) {
-                console.log("User email:", email); // You can send this to the backend if needed
-                window.open(`https://whatson.cityofsydney.nsw.gov.au${selectedEventLink}`, "_blank"); // Open event link in new tab
-                document.getElementById("emailModal").style.display = "none"; // Close modal
-            } else {
-                alert("Please enter a valid email!");
-            }
-        });
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        document.getElementById("events-list").innerHTML = "<p>Failed to load events.</p>";
+      }
+    }
 
-        fetchEvents(); // Load events on page load
-    </script>
+    // Close modal on X click
+    document.querySelector(".close").addEventListener("click", () => {
+      document.getElementById("emailModal").style.display = "none";
+    });
 
+    // Submit email and redirect
+    document.getElementById("submitEmail").addEventListener("click", () => {
+      const email = document.getElementById("emailInput").value;
+      if (email) {
+        console.log("User email:", email); // optionally send to backend
+        window.open(`https://whatson.cityofsydney.nsw.gov.au${selectedEventLink}`, "_blank");
+        document.getElementById("emailModal").style.display = "none";
+        document.getElementById("emailInput").value = ""; // clear input
+      } else {
+        alert("Please enter a valid email!");
+      }
+    });
+    fetchEvents();
+  </script>
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      padding-top: 100px;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      margin: auto;
+      background-color: #fff;
+      padding: 20px;
+      width: 300px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .close {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .event-card {
+      margin: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+  </style>
 </body>
 </html>
-

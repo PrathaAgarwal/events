@@ -1,42 +1,64 @@
 import express from "express";
-import pg from "pg";
-import cron from "node-cron";
-import { exec } from "child_process";
-const app = express();
-
 import dotenv from "dotenv";
+import cors from "cors";
+import path, { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, get, child } from "firebase/database";
+
 dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const db = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // Needed for some cloud services
-});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Run the scraper every 24 hours (midnight)
-cron.schedule("0 0 * * *", () => {
-    console.log("Running scraper...");
-    exec("python scraper.py", (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error running scraper: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.error(`Scraper stderr: ${stderr}`);
-            return;
-        }
-        console.log(`Scraper output: ${stdout}`);
-    });
-});
-
-
+const firebaseConfig = {
+    apiKey: "AIzaSyABEN2ZPgxw6n-uNGP6Y7t3z6TaKwca2iY",
+    authDomain: "event-30a4b.firebaseapp.com",
+    databaseURL: "https://event-30a4b-default-rtdb.firebaseio.com",
+    projectId: "event-30a4b",
+    storageBucket: "event-30a4b.appspot.com", 
+    messagingSenderId: "610818410436",
+    appId: "1:610818410436:web:70f72f289b1333affac691",
+    measurementId: "G-YHPFF3QHFE"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+app.use(express.static(join(__dirname, "assets")));
 app.get("/", (req, res) => {
-  res.sendFile("/web dev/mine/Assignments/assignment1/index.html");
+    res.sendFile(join(__dirname, "index.html"));
 });
+
 app.get("/events", async (req, res) => {
+    console.log("GET /events called");
     try {
-      const result = await db.query("SELECT * FROM events ORDER BY date desc");
-      res.json(result.rows);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+        const snapshot = await get(child(ref(db), "scrapedData"));
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const events = Object.values(data); 
+            res.json(events);
+        } else {
+            res.status(404).json({ message: "No events found." });
+        }
+    } catch (error) {
+        console.error("Error fetching data:", error.message);
+        res.status(500).json({ error: error.message });
     }
+});
+const { exec } = require("child_process");
+
+app.get("/scrape", (req, res) => {
+  exec("python3 scrap.py", (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return res.status(500).send("Error running scraper");
+    }
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+    res.send("Scraping finished");
   });
+});
+app.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+});

@@ -1,7 +1,9 @@
 import os
 import logging
-import psycopg2
-import requests
+import firebase_admin
+from firebase_admin import credentials, db
+import torch
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (
@@ -12,21 +14,17 @@ from telegram.ext import (
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-HF_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+service_account_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")  # Firebase credentials
+DATABASE_URL = os.getenv("FIREBASE_DB_URL")
 
-# Database connection parameters
-DB_PARAMS = {
-    "dbname": "all_events",
-    "user": "postgres",
-    "password": "root",
-    "host": "localhost",
-    "port": "5432"
-}
+# Initialize Firebase
+cred = credentials.Certificate(service_account_path)
+firebase_admin.initialize_app(cred, {"databaseURL": DATABASE_URL})
 
-# Hugging Face Inference API details
-HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.1"  
-HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
+# Load FLAN-T5 Model (Small)
+model_name = "google/flan-t5-small"
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+model = T5ForConditionalGeneration.from_pretrained(model_name)
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -52,32 +50,32 @@ async def budget(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return LOCATION
 
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Saves location, stores in DB, and fetches event recommendations."""
+    """Saves location, stores in Firebase, and fetches event recommendations."""
     context.user_data['location'] = update.message.text
     user_data = context.user_data
-    user_id = update.message.chat_id
+    user_id = str(update.message.chat_id)  # Convert to string for Firebase keys
 
-    # Save preferences in DB
+    # Save preferences in Firebase
     try:
-        with psycopg2.connect(**DB_PARAMS) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO user_preferences (id, event_type, budget, location) VALUES (%s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET event_type = EXCLUDED.event_type, budget = EXCLUDED.budget, location = EXCLUDED.location",
-                    (user_id, user_data['event_type'], user_data['budget'], user_data['location'])
-                )
+        ref = db.reference(f"user_preferences/{user_id}")
+        ref.set({
+            "event_type": user_data['event_type'],
+            "budget": user_data['budget'],
+            "location": user_data['location']
+        })
     except Exception as e:
-        logging.error(f"Database error: {e}")
+        logging.error(f"Firebase error: {e}")
         await update.message.reply_text("Error saving preferences! Try again later.")
         return ConversationHandler.END
 
-    # Query the LLM
+    # Query FLAN-T5 Model
     query = f"Find me {user_data['event_type']} events in {user_data['location']} under {user_data['budget']} budget."
-    response = requests.post(HF_API_URL, headers=HEADERS, json={"inputs": query})
-
-    if response.status_code == 200:
-        recommendation = response.json()[0]['generated_text']
-    else:
-        recommendation = "I couldn't fetch event recommendations right now. Try again later."
+    
+    inputs = tokenizer(query, return_tensors="pt")
+    with torch.no_grad():
+        output = model.generate(**inputs, max_length=50)
+    
+    recommendation = tokenizer.decode(output[0], skip_special_tokens=True)
 
     await update.message.reply_text(f"🎟️ **Here are some events for you:**\n{recommendation}")
     return ConversationHandler.END
